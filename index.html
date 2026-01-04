@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>JUMANJI XO Adventure</title>
+<style>
+body {
+  margin: 0;
+  height: 100vh;
+  background: linear-gradient(135deg, #0b3d2e, #1e7f4f, #f2c94c);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: "Trebuchet MS", sans-serif;
+  color: white;
+}
+.game {
+  background: rgba(0,0,0,0.65);
+  padding: 25px 30px;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 0 40px rgba(0,0,0,0.8);
+}
+h1 {
+  letter-spacing: 4px;
+  color: #f2c94c;
+}
+.subtitle {
+  opacity: 0.9;
+}
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, 90px);
+  gap: 12px;
+  margin: 20px auto;
+}
+.cell {
+  width: 90px;
+  height: 90px;
+  background: radial-gradient(circle at top left, #34d399, #065f46);
+  border-radius: 15px;
+  font-size: 3rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: 0 6px 0 #043d2c;
+  user-select: none;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.cell.X { color: gold; text-shadow: 0 0 12px gold; }
+.cell.O { color: skyblue; text-shadow: 0 0 12px skyblue; }
+button {
+  margin-top: 15px;
+  padding: 10px 25px;
+  border-radius: 20px;
+  border: none;
+  background: linear-gradient(135deg, #f2c94c, #f2994a);
+  font-weight: bold;
+  cursor: pointer;
+}
+/* Letter pop-up */
+.letter {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: none;
+  justify-content: center;
+  align-items: center;
+}
+.letter-box {
+  background: #f5e6c8;
+  color: #2b2b2b;
+  padding: 30px;
+  border-radius: 12px;
+  max-width: 350px;
+  text-align: center;
+  font-family: "Georgia", serif;
+  box-shadow: 0 0 30px black;
+}
+</style>
+</head>
+<body>
+
+<div class="game">
+  <h1>JUMANJI</h1>
+  <p class="subtitle">Station 1: The Jungle Board</p>
+  <div class="board" id="board"></div>
+  <button onclick="resetGame()">Restart Challenge</button>
+</div>
+
+<div class="letter" id="letter">
+  <div class="letter-box">
+    <h2>📜 JUMANJI</h2>
+    <p>
+      You have entered <b>Jumanji</b>…<br><br>
+      One of our friends is trapped inside the game.<br><br>
+      To save them, you must find the <b>four other avatar characters</b>.<br>
+      Each avatar can only be found by conquering <b>one station</b>.<br><br>
+      Only together can you save <b>Jumanji</b>.
+    </p>
+    <button onclick="showLookDown()">Continue</button>
+  </div>
+</div>
+
+<audio id="drums">
+  <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+const board = document.getElementById("board");
+const letter = document.getElementById("letter");
+const drums = document.getElementById("drums");
+let cells = [];
+let gameOver = false;
+
+function start() {
+  board.innerHTML = "";
+  cells = [];
+  gameOver = false;
+  for (let i = 0; i < 9; i++) {
+    const c = document.createElement("div");
+    c.className = "cell";
+    c.onclick = () => move(i);
+    board.appendChild(c);
+    cells.push(c);
+  }
+}
+
+function move(i) {
+  if (cells[i].textContent || gameOver) return;
+  cells[i].textContent = "X";
+  cells[i].classList.add("X");
+  if (win("X")) {
+    gameOver = true;
+    // Winner animation
+    cells.forEach(c=>c.classList.add("winner-animate"));
+    // Play drums
+    drums.currentTime = 0;
+    drums.play();
+    // Show letter first
+    setTimeout(()=>letter.style.display="flex", 300);
+    return;
+  }
+  setTimeout(aiMove, 400);
+}
+
+function aiMove() {
+  if (gameOver) return;
+  const empty = cells.map((c,i)=>c.textContent===""?i:null).filter(i=>i!==null);
+  if (!empty.length) return;
+  const m = empty[Math.floor(Math.random()*empty.length)];
+  cells[m].textContent="O";
+  cells[m].classList.add("O");
+  if (win("O")) gameOver = true;
+}
+
+function win(p){
+  const w=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+  return w.some(x=>x.every(i=>cells[i].textContent===p));
+}
+
+function resetGame() {
+  start();
+}
+
+// Show the "look downwards" message after clicking continue
+function showLookDown(){
+  letter.style.display="none";
+  alert("Winner says: look downwards");
+}
+
+// Winner animation CSS
+const style = document.createElement('style');
+style.innerHTML = `
+.winner-animate {
+  animation: glow 0.8s infinite alternate;
+}
+@keyframes glow {
+  from { transform: scale(1); box-shadow: 0 0 20px gold; }
+  to { transform: scale(1.2); box-shadow: 0 0 35px gold; }
+}`;
+document.head.appendChild(style);
+
+start();
+</script>
+
+</body>
+</html>
